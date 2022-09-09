@@ -17,7 +17,7 @@ We reccomend to interact with this package either through downloading and runnin
 
 If you are unfamiliar with downloads then using the online version is recommended.
 
-Access the online notebook here: [online notebook](https://deepnote.com/workspace/fmcil-1f244322-b560-46a9-bfe3-cb29fad834c7/project/AdsorptionBreakthroughAnalysis-06bd4f69-f127-42b0-bbc2-792ba35155d4/%2Finit.ipynb)
+Access the online notebook here: [online notebook](https://deepnote.com/workspace/fmcil-1f244322-b560-46a9-bfe3-cb29fad834c7/project/AdsorptionBreakthroughAnalysis-06bd4f69-f127-42b0-bbc2-792ba35155d4/%2FExplaining_program.ipynb)
 
 ## Usage 
 
