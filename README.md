@@ -11,6 +11,14 @@ The folders include:
 * Generating results
   * Contains a simple jupyter notebook with the essentials needed to run and produce the required outputs
 
+## Package interaction
+
+We reccomend to interact with this package either through downloading and running locally or by accessing the completely online version (link below).
+
+If you are unfamiliar with downloads then using the online version is recommended.
+
+Access the online notebook here: [online notebook](https://deepnote.com/workspace/fmcil-1f244322-b560-46a9-bfe3-cb29fad834c7/project/AdsorptionBreakthroughAnalysis-06bd4f69-f127-42b0-bbc2-792ba35155d4/%2Finit.ipynb)
+
 ## Usage 
 
 The program takes in MS and coriolis readings and then creates a dataframe containing only the relevant breakthrough data
