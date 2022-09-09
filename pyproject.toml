@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "AdsorptionBreakthroughAnalysis"
-version = "0.0.2"
+version = "0.0.1"
 authors = [
   { name="Daniel Maroto-Andresen", email="dm937@cam.ac.uk" },
 ]
@@ -28,5 +28,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/dm937/AdsorptionBreakthroughAnalysis"
-"Bug Tracker" = "https://github.com/dm937/AdsorptionBreakthroughAnalysis/issues"
+"Homepage" = "https://github.com/dm937/Adsorption_Breakthrough_Analysis"
+"Bug Tracker" = "https://github.com/dm937/Adsorption_Breakthrough_Analysis/issues"

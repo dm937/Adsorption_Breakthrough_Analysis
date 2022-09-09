@@ -1,5 +1,5 @@
 LICENSE
-README.txt
+README.md
 pyproject.toml
 src/AdsorptionBreakthroughAnalysis/__init__.py
 src/AdsorptionBreakthroughAnalysis/breakthrough_analysis.py
