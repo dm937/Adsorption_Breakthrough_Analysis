@@ -13,11 +13,18 @@ The folders include:
 
 ## Package interaction
 
-We reccomend to interact with this package either through downloading and running locally or by accessing the completely online version (link below).
+There are two ways to interact with this package.
 
-If you are unfamiliar with downloads then using the online version is recommended.
+<b> 1. Local installation </b>
+- Install via pip, (`pip install AdsorptionBreakthroughAnalysis`)
+- Cloning the github repo (`git clone https://github.com/dm937/Adsorption_Breakthrough_Analysis/`) 
+- Use the jupyter notebook locally. (Check `Explaining program/Explaining_program.ipynb`)
 
-Access the online notebook here: [online notebook](https://deepnote.com/workspace/fmcil-1f244322-b560-46a9-bfe3-cb29fad834c7/project/AdsorptionBreakthroughAnalysis-06bd4f69-f127-42b0-bbc2-792ba35155d4/%2FExplaining_program.ipynb)
+<b> 2. Using the online notebook (easy) </b>
+- Using the [online notebook](https://deepnote.com/workspace/fmcil-1f244322-b560-46a9-bfe3-cb29fad834c7/project/AdsorptionBreakthroughAnalysis-06bd4f69-f127-42b0-bbc2-792ba35155d4/%2FExplaining_program.ipynb)
+
+If you are unfamiliar with pip then we recommend using online notebook.
+
 
 ## Usage 
 
