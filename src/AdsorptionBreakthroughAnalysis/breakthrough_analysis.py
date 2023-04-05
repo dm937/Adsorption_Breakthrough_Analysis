@@ -3,12 +3,12 @@ import pandas as pd
 pd.options.mode.chained_assignment = "warn"
 # Can be set to None, "warn", or "raise". "warn" is the default.
 import copy
-import numpy as np
 import datetime
+
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 from scipy.ndimage.filters import uniform_filter1d
-
 
 # self.conditions[] - useful for accessing
 R = 8.314  # J/mol/K (universal gas constant)
