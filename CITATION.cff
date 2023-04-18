@@ -3,6 +3,10 @@ message: "If you use this software, please cite it as below."
 title: "AdsorptionBreakthroughAnalysis"
 authors:
   - name: "Daniel Maroto-Andresen"
+  - name: "John Young"
+  - name: "Fergus Mcilwaine"
+  - name: "Enrique Garcia"
+  - name: "Susana Garcia"
 version: 0.0.1-dev
 doi:
 url: "https://github.com/RCCS-CaptureTeam/Adsorption_Breakthrough_Analysis"
