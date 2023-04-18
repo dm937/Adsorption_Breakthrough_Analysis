@@ -135,25 +135,17 @@ class experiment_analysis:
             if i == end_pos + 2 * avg_range + 2:
                 Found = True
             if (
-                sum(
-                    series_corrected_pressure.loc[
-                        i - (2 * avg_range + 2) : i - (avg_range + 2)
-                    ]
-                )
+                sum(series_corrected_pressure.loc[i - (2 * avg_range + 2) : i - (avg_range + 2)])
                 / (avg_range * series_corrected_pressure.loc[i - (avg_range + 2)])
                 > 0.9
             ):
                 if (
                     abs(
                         (
-                            sum(series_corrected_pressure.loc[(i - avg_range) : i])
-                            / avg_range
+                            sum(series_corrected_pressure.loc[(i - avg_range) : i]) / avg_range
                             - series_corrected_pressure.loc[i - (avg_range + 2)]
                         )
-                        / (
-                            sum(series_corrected_pressure.loc[(i - avg_range) : i])
-                            / avg_range
-                        )
+                        / (sum(series_corrected_pressure.loc[(i - avg_range) : i]) / avg_range)
                     )
                     > percentage_diff
                 ):
@@ -175,16 +167,14 @@ class experiment_analysis:
         else:
             RS_new = 1
         return {"RS_new": RS_new, "position": position}
-    
+
     def read_raw_MS(self):
-        df_MS = pd.read_csv(
-            self.MS_file_name, header=(self.conditions["MS_header_row"] - 1)
-        ).drop(
+        df_MS = pd.read_csv(self.MS_file_name, header=(self.conditions["MS_header_row"] - 1)).drop(
             ["Time", "Unnamed: 7"], axis=1
         )  # reading the MS csv as a dataframe
-        
+
         # Adding the MS start time to the times in our dataframe
-        df_MS.loc[:,"Time [s]"] = df_MS['ms'].values / 1000 + self.conditions["MS_start"] 
+        df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
         df_MS = df_MS.drop(["ms"], axis=1)
         return df_MS
 
@@ -196,13 +186,12 @@ class experiment_analysis:
         ).drop(
             ["Time 2", "Time 3", "Time 4"], axis=1
         )  # reading the flow meter csv as a dataframe
-        df_FM.loc[:,"Time [s]"] = df_FM["Time"].values + self.conditions["Coriolis_start"]
+        df_FM.loc[:, "Time [s]"] = df_FM["Time"].values + self.conditions["Coriolis_start"]
         # Adding the flow meter start time to the time in this data
         df_FM = df_FM.drop(["Time"], axis=1)
         return df_FM
 
     def interpolate_combined_df(self, df_all):
-
         # In this for loop we are interpolating between each time point that exists for the MS data, to get the flows from the coriolis at that time
         # below we are getting from where to start interpolating - the first positions outside the breakthrough time where there is a non-NaN pp reading
         BBTMSR = Before_BT_Real_MS_index = df_all.loc[
@@ -216,9 +205,7 @@ class experiment_analysis:
             ["Time [s]"],
         ].index[0]
         # interpolating flow
-        df_all.loc[np.isnan(df_all["CO2 pressure [torr]"]) == False].loc[
-            BBTMSR:ABTMSR, "Time [s]"
-        ]
+        df_all.loc[np.isnan(df_all["CO2 pressure [torr]"]) == False].loc[BBTMSR:ABTMSR, "Time [s]"]
         for comp in ["CO2", "N2", "He", "Outlet"]:
             label = comp + " flow [%]"
             Index_of_real_flow = (
@@ -239,61 +226,41 @@ class experiment_analysis:
             )
             count = 0
             original_flow = copy.deepcopy(df_all.loc[:, label])
-            for i in (
-                df_all[(np.isnan(df_all.loc[:, label]))]
-                .loc[BBTMSR - 10 : ABTMSR + 10]
-                .index
-            ):
+            for i in df_all[(np.isnan(df_all.loc[:, label]))].loc[BBTMSR - 10 : ABTMSR + 10].index:
                 original_flow.loc[i] = interpolated_flow_list[count]
                 count += 1
-            df_all.loc[:, "Interpolated " + label] = pd.Series(
-                original_flow, index=df_all.index
-            )
+            df_all.loc[:, "Interpolated " + label] = pd.Series(original_flow, index=df_all.index)
         return df_all
 
     def merge_MS_FM(self, df_MS, df_FM):
-                # This line below is the all important step. We merge the two dataframes based on the times defined above, then we make sure its ordered in time order, and also renaming columns
-        df_all = (
-            pd.merge(df_MS, df_FM, on="Time [s]", how="outer", sort=True)
-            .rename(
-                columns={
-                    "Nitrogen": "N2 pressure [torr]",
-                    "Water": "H2O pressure [torr]",
-                    "Carbon dioxide": "CO2 pressure [torr]",
-                    "Oxygen": "O2 pressure [torr]",
-                    "Helium": "He pressure [torr]",
-                    "CO2": "CO2 flow [%]",
-                    "He": "He flow [%]",
-                    "N2": "N2 flow [%]",
-                    "Outlet": "Outlet flow [%]",
-                }
-            )
+        # This line below is the all important step. We merge the two dataframes based on the times defined above, then we make sure its ordered in time order, and also renaming columns
+        df_all = pd.merge(df_MS, df_FM, on="Time [s]", how="outer", sort=True).rename(
+            columns={
+                "Nitrogen": "N2 pressure [torr]",
+                "Water": "H2O pressure [torr]",
+                "Carbon dioxide": "CO2 pressure [torr]",
+                "Oxygen": "O2 pressure [torr]",
+                "Helium": "He pressure [torr]",
+                "CO2": "CO2 flow [%]",
+                "He": "He flow [%]",
+                "N2": "N2 flow [%]",
+                "Outlet": "Outlet flow [%]",
+            }
         )
         df_all.reset_index(drop=True, inplace=True)
         return df_all
 
-    def create_df_breakthrough(self,df_all):
+    def create_df_breakthrough(self, df_all):
         # Now deleting rows without MS values
         df_breakthrough_start = df_all.loc[(abs(df_all["CO2 pressure [torr]"]) >= 0)]
         # Now we are only taking the part of the dataframe that we are interested in (ignoring drying, cooling, purging etc.)
         df_not_breakthrough = df_breakthrough_start.loc[
-            (
-                (
-                    df_breakthrough_start["Time [s]"]
-                    < self.conditions["breakthrough_start"]
-                )
-            )
+            ((df_breakthrough_start["Time [s]"] < self.conditions["breakthrough_start"]))
         ]
         df_breakthrough = df_breakthrough_start.loc[
             (
-                (
-                    df_breakthrough_start["Time [s]"]
-                    > self.conditions["breakthrough_start"]
-                )
-                & (
-                    df_breakthrough_start["Time [s]"]
-                    < self.conditions["breakthrough_end"]
-                )
+                (df_breakthrough_start["Time [s]"] > self.conditions["breakthrough_start"])
+                & (df_breakthrough_start["Time [s]"] < self.conditions["breakthrough_end"])
             )
         ]
         df_breakthrough.reset_index(drop=True, inplace=True)
@@ -315,8 +282,8 @@ class experiment_analysis:
             inplace=True,
         )
         return df_breakthrough
-    
-    def generate_flows(self,df_breakthrough):
+
+    def generate_flows(self, df_breakthrough):
         AvgRange = 25
         PPs = {"PPdashCO2": 0, "PPdashHe": 0, "PPdashN2": 0}
         for comp in ["CO2", "He", "N2"]:
@@ -343,23 +310,19 @@ class experiment_analysis:
                 / AvgRange
             )
         if (self.conditions["LowConcCo2"] == False) and (
-            sum(df_breakthrough.loc[:, "Interpolated CO2 flow [%]"])
-            / len(df_breakthrough.index)
+            sum(df_breakthrough.loc[:, "Interpolated CO2 flow [%]"]) / len(df_breakthrough.index)
             > 4
         ):
             RSN2 = 0.78
         if (self.conditions["LowConcCo2"] == False) and (
-            sum(df_breakthrough.loc[:, "Interpolated CO2 flow [%]"])
-            / len(df_breakthrough.index)
+            sum(df_breakthrough.loc[:, "Interpolated CO2 flow [%]"]) / len(df_breakthrough.index)
             <= 4
         ):
             RSN2 = 0.96
         else:
             RSN2 = 1
         RSCO2 = (
-            FlowAverages["N2_flow"]
-            * self.conditions["MaxInletFlows"]["N2"]
-            * PPs["PPdashCO2"]
+            FlowAverages["N2_flow"] * self.conditions["MaxInletFlows"]["N2"] * PPs["PPdashCO2"]
         ) / (
             RSN2
             * FlowAverages["CO2_flow"]
@@ -367,9 +330,7 @@ class experiment_analysis:
             * PPs["PPdashN2"]
         )
         RSHe = (
-            FlowAverages["N2_flow"]
-            * self.conditions["MaxInletFlows"]["N2"]
-            * PPs["PPdashHe"]
+            FlowAverages["N2_flow"] * self.conditions["MaxInletFlows"]["N2"] * PPs["PPdashHe"]
         ) / (
             RSN2
             * FlowAverages["He_flow"]
@@ -394,15 +355,9 @@ class experiment_analysis:
                                 copy.deepcopy(
                                     (
                                         df_breakthrough[label][i]
-                                        - self.conditions["Constants"]["Background MS"][
-                                            comp
-                                        ]
+                                        - self.conditions["Constants"]["Background MS"][comp]
                                         - 0.114
-                                        * (
-                                            df_breakthrough[
-                                                "Corrected CO2 pressure [torr]"
-                                            ][i]
-                                        )
+                                        * (df_breakthrough["Corrected CO2 pressure [torr]"][i])
                                     )
                                 )
                             )
@@ -417,11 +372,8 @@ class experiment_analysis:
                 df_breakthrough.loc[:, new_label] = pd.Series(
                     copy.deepcopy(
                         [
-                            (i - self.conditions["Constants"]["Background MS"][comp])
-                            / RSCO2
-                            if (i - self.conditions["Constants"]["Background MS"][comp])
-                            / RSCO2
-                            > 0
+                            (i - self.conditions["Constants"]["Background MS"][comp]) / RSCO2
+                            if (i - self.conditions["Constants"]["Background MS"][comp]) / RSCO2 > 0
                             else 0
                             for i in df_breakthrough[label]
                         ]
@@ -432,11 +384,8 @@ class experiment_analysis:
                 df_breakthrough.loc[:, new_label] = pd.Series(
                     copy.deepcopy(
                         [
-                            (i - self.conditions["Constants"]["Background MS"][comp])
-                            / RSHe
-                            if (i - self.conditions["Constants"]["Background MS"][comp])
-                            / RSHe
-                            > 0
+                            (i - self.conditions["Constants"]["Background MS"][comp]) / RSHe
+                            if (i - self.conditions["Constants"]["Background MS"][comp]) / RSHe > 0
                             else 0
                             for i in df_breakthrough[label]
                         ]
@@ -461,23 +410,18 @@ class experiment_analysis:
 
         return df_breakthrough
 
-
-    def connect_discontinuities(self,df_breakthrough):
-    # This connects discontinuities present due to current Mass spec
+    def connect_discontinuities(self, df_breakthrough):
+        # This connects discontinuities present due to current Mass spec
         if self.conditions["LowConcCo2"] == False:
             for i in range(2):
                 for comp in ["CO2", "N2"]:
                     RS_and_pos = self.discontinuity_search(
-                        series_breakthrough_time=df_breakthrough.loc[
-                            :, ("Breakthrough time [s]")
-                        ],
+                        series_breakthrough_time=df_breakthrough.loc[:, ("Breakthrough time [s]")],
                         series_corrected_pressure=df_breakthrough.loc[
                             :, ("Corrected " + comp + " pressure [torr]")
                         ],
                     )
-                    if (RS_and_pos["position"] != "None") and (
-                        RS_and_pos["position"] != 0
-                    ):
+                    if (RS_and_pos["position"] != "None") and (RS_and_pos["position"] != 0):
                         df_breakthrough.loc[
                             : RS_and_pos["position"] - 1,
                             "Corrected " + comp + " pressure [torr]",
@@ -490,7 +434,8 @@ class experiment_analysis:
                             " divided all previous points",
                         )
         return df_breakthrough
-    def compute_mole_fractions(self,df_breakthrough):
+
+    def compute_mole_fractions(self, df_breakthrough):
         # Calculating mole fractions in the mass spectrometer in the below for loop
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = "Corrected " + comp + " pressure [torr]"
@@ -504,44 +449,40 @@ class experiment_analysis:
                         for j in ["CO2", "N2", "He", "H2O", "O2"]
                     )
                 )
-            df_breakthrough.loc[:, new_label] = pd.Series(
-                molar_list, index=df_breakthrough.index
-            )
+            df_breakthrough.loc[:, new_label] = pd.Series(molar_list, index=df_breakthrough.index)
         return df_breakthrough
 
-    def compute_fake_outlet_ave_mw(self,df_breakthrough):
-
+    def compute_fake_outlet_ave_mw(self, df_breakthrough):
         fake_outlet_ave_mol_weight = []
         for component in ["CO2", "N2", "He", "H2O", "O2"]:
             column = f"True MS {component} mole fraction [-]"
-            single_component = df_breakthrough[column].values * self.conditions["Constants"]["Mw"][component]
+            single_component = (
+                df_breakthrough[column].values * self.conditions["Constants"]["Mw"][component]
+            )
             fake_outlet_ave_mol_weight.append(single_component)
 
-        df_breakthrough.loc[
-            :, "Fake Outlet average molecular weight [kg/mol]"
-        ] = np.array(fake_outlet_ave_mol_weight).sum(axis=0)
-
+        df_breakthrough.loc[:, "Fake Outlet average molecular weight [kg/mol]"] = np.array(
+            fake_outlet_ave_mol_weight
+        ).sum(axis=0)
 
         return df_breakthrough
 
-    def calculate_mass_flow(self,df_breakthrough):
-        
+    def calculate_mass_flow(self, df_breakthrough):
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             # mass flows for each component is calculated
             label = "True MS " + comp + " mole fraction [-]"
             new_label = "True " + comp + " mass flow [kg/s]"
-            df_breakthrough.loc[:, new_label] =(
-                    self.conditions["Constants"]["max_outlet"]
-                    * df_breakthrough["Interpolated Outlet flow [%]"].values
-                    / 100
-                    * df_breakthrough[label].values
-                    * self.conditions["Constants"]["Mw"][comp]
-                    / df_breakthrough["Fake Outlet average molecular weight [kg/mol]"].values
-                    )
+            df_breakthrough.loc[:, new_label] = (
+                self.conditions["Constants"]["max_outlet"]
+                * df_breakthrough["Interpolated Outlet flow [%]"].values
+                / 100
+                * df_breakthrough[label].values
+                * self.conditions["Constants"]["Mw"][comp]
+                / df_breakthrough["Fake Outlet average molecular weight [kg/mol]"].values
+            )
         return df_breakthrough
-    
-    def calculate_molar_flow(self,df_breakthrough):
-             
+
+    def calculate_molar_flow(self, df_breakthrough):
         # Now converting the mass flow to molar flow values
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = "True " + comp + " mass flow [kg/s]"
@@ -551,8 +492,7 @@ class experiment_analysis:
             )
         return df_breakthrough
 
-    def calculate_He_bypass(self,df_breakthrough):
-          
+    def calculate_He_bypass(self, df_breakthrough):
         # Now calculating the molar flow rate of the helium through the bypass from the helium mass flow meter
         df_breakthrough.loc[:, "He bypass flow [mol/s]"] = pd.Series(
             [
@@ -565,9 +505,7 @@ class experiment_analysis:
         )
         return df_breakthrough
 
-
-    def calculate_true_molar_flow(self,df_breakthrough):
-        
+    def calculate_true_molar_flow(self, df_breakthrough):
         # Now calculating the molar flow in the outlet below. We calculate the helium flow (there is helium initially in the reactor left over from the drying step), from the helium flow in the MS minus the helium flow from the bypass
         for comp in ["He", "CO2", "N2", "H2O", "O2"]:
             label = "True " + comp + " molar flow [mol/s]"
@@ -577,12 +515,9 @@ class experiment_analysis:
                     df_breakthrough.loc[:, new_label] = pd.Series(
                         [
                             df_breakthrough[label][i]
-                            if df_breakthrough[label][i]
-                            < self.conditions["water_outlier_value"]
+                            if df_breakthrough[label][i] < self.conditions["water_outlier_value"]
                             else df_breakthrough[label][i - 1]
-                            for i in range(
-                                len(df_breakthrough["Breakthrough time [s]"])
-                            )
+                            for i in range(len(df_breakthrough["Breakthrough time [s]"]))
                         ],
                         index=df_breakthrough.index,
                     )
@@ -596,8 +531,7 @@ class experiment_analysis:
                 )
         return df_breakthrough
 
-    def calculate_total_molar_flow(self,df_breakthrough):
-        
+    def calculate_total_molar_flow(self, df_breakthrough):
         # #Summing these molar flows to a total molar flow
         df_breakthrough.loc[:, "Total molar flow [mol/s]"] = pd.Series(
             [
@@ -611,22 +545,16 @@ class experiment_analysis:
         )
         # below removes the possibilty of /0 error as it deletes rows where total molar flow is 0
         df_breakthrough = df_breakthrough.drop(
-            index=list(
-                df_breakthrough.loc[
-                    df_breakthrough["Total molar flow [mol/s]"] <= 0
-                ].index
-            )
+            index=list(df_breakthrough.loc[df_breakthrough["Total molar flow [mol/s]"] <= 0].index)
         )
         df_breakthrough = df_breakthrough.reset_index(drop=True)
-        
+
         # setting the first however many desired values to 0
         if self.conditions["initial_sweep"] > 0:
-            df_breakthrough.loc[
-                0 : self.conditions["initial_sweep"], "CO2 molar flow [mol/s]"
-            ] = 0
+            df_breakthrough.loc[0 : self.conditions["initial_sweep"], "CO2 molar flow [mol/s]"] = 0
         return df_breakthrough
 
-    def calculate_mole_fraction_from_flows(self,df_breakthrough):
+    def calculate_mole_fraction_from_flows(self, df_breakthrough):
         # Calculating mole fractions from these molar flows
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = comp + " molar flow [mol/s]"
@@ -637,8 +565,7 @@ class experiment_analysis:
             )
         return df_breakthrough
 
-    def calculate_concentration(self,df_breakthrough):
-
+    def calculate_concentration(self, df_breakthrough):
         # Calculating concentrations from these mole fractions
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = comp + " mole fraction [-]"
@@ -651,7 +578,7 @@ class experiment_analysis:
             )
         return df_breakthrough
 
-    def calculate_inlet_flow(self,df_breakthrough):
+    def calculate_inlet_flow(self, df_breakthrough):
         # Note that He inlet flow is 0 here
         # Calculating the inlet flow rates for each component:
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
@@ -665,9 +592,7 @@ class experiment_analysis:
             elif comp == "CO2":
                 df_breakthrough.loc[:, new_label] = pd.Series(
                     [
-                        self.conditions["MaxInletFlows"]["CO2"][
-                            self.conditions["LowConcCo2"]
-                        ]
+                        self.conditions["MaxInletFlows"]["CO2"][self.conditions["LowConcCo2"]]
                         * df_breakthrough[label][i]
                         / 100
                         for i in range(len(df_breakthrough["Breakthrough time [s]"]))
@@ -677,9 +602,7 @@ class experiment_analysis:
             elif comp == "N2":
                 df_breakthrough.loc[:, new_label] = pd.Series(
                     [
-                        self.conditions["MaxInletFlows"]["N2"]
-                        * df_breakthrough[label][i]
-                        / 100
+                        self.conditions["MaxInletFlows"]["N2"] * df_breakthrough[label][i] / 100
                         for i in range(len(df_breakthrough["Breakthrough time [s]"]))
                     ],
                     index=df_breakthrough.index,
@@ -694,10 +617,10 @@ class experiment_analysis:
                     ],
                     index=df_breakthrough.index,
                 )
-        
+
         return df_breakthrough
-        
-    def calculate_inlet_mf(self,df_breakthrough):
+
+    def calculate_inlet_mf(self, df_breakthrough):
         # Now calculating inlet mole fractions
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = comp + " inlet flow [mol/s]"
@@ -727,7 +650,7 @@ class experiment_analysis:
             df_breakthrough = df_breakthrough.reset_index(drop=True)
         return df_breakthrough
 
-    def calculate_inlet_conc(self,df_breakthrough):
+    def calculate_inlet_conc(self, df_breakthrough):
         # And calculating inlet concentrations
         for comp in ["CO2", "N2", "He", "H2O", "O2"]:
             label = comp + " inlet mole fraction [-]"
@@ -743,8 +666,7 @@ class experiment_analysis:
             )
         return df_breakthrough
 
-    def normalize_measurements(self,df_breakthrough):
-        
+    def normalize_measurements(self, df_breakthrough):
         # This code normalises the different measurements (listed in first for statement)
         for measurement in [
             "mole fraction [-]",
@@ -760,8 +682,7 @@ class experiment_analysis:
                 new_label = "Normalised " + outlet_label
                 df_breakthrough.loc[:, new_label] = pd.Series(
                     [
-                        df_breakthrough[outlet_label][i]
-                        / df_breakthrough[inlet_label][i]
+                        df_breakthrough[outlet_label][i] / df_breakthrough[inlet_label][i]
                         if df_breakthrough[inlet_label][i] > 0
                         else 0
                         for i in range(len(df_breakthrough["Breakthrough time [s]"]))
@@ -769,9 +690,8 @@ class experiment_analysis:
                     index=df_breakthrough.index,
                 )
         return df_breakthrough
-    def order_df(self,df_breakthrough):
-            
-            
+
+    def order_df(self, df_breakthrough):
         # creating ordered list for below normalisation loops to access columns easier
         order = ["Breakthrough time [s]"]
         for result in [
@@ -795,8 +715,7 @@ class experiment_analysis:
             else:
                 for comp in ["CO2", "N2", "He", "H2O", "O2"]:
                     order.append("Normalised " + comp + " " + result[1:])
-        
-        
+
         # Finding which row in the dataframe the smoothing should start
         startlist = {}
         for comp in ["CO2", "N2", "He", "H2O"]:
@@ -831,34 +750,25 @@ class experiment_analysis:
                         new_list.append(filtered_data[q])
                     df_breakthrough.loc[:, new_label] = pd.Series(new_list)
         return df_breakthrough
-    def perform_extra_normalization(self,df_breakthrough):
+
+    def perform_extra_normalization(self, df_breakthrough):
         # We can normalise all the values to the final value now for the smoothed data if we like
         for comp in ["CO2", "N2", "He", "H2O"]:
             label = "Smoothed Normalised " + comp + " molar flow [mol/s]"
             series = pd.Series(
-                [
-                    i / df_breakthrough[label].iloc[-1]
-                    for i in df_breakthrough[label]
-                ],
+                [i / df_breakthrough[label].iloc[-1] for i in df_breakthrough[label]],
                 index=df_breakthrough.index,
             )
-            df_breakthrough.loc[
-                :, "Smoothed renormalised " + comp + " molar flow [mol/s]"
-            ] = series
+            df_breakthrough.loc[:, "Smoothed renormalised " + comp + " molar flow [mol/s]"] = series
         return df_breakthrough
 
-    
-    def create_standard_form(self,df_breakthrough):
-        
-
+    def create_standard_form(self, df_breakthrough):
         # this is to find the standard form of results as reccomended by IAS lecture which is y(t) * Q(t) / (yin * Qin)
         # where Q are the total volume flow rate in mL/min
         # where y is the molar fraction (He is not neglected)
         # we are finding the yinQin column for N2 and CO2, this column is equal to the inlet volumetric flow for the respective compound as the pressures and temps are the same for all MFCs so molar fraction is equal to volumetric fraction
         # yinQin is in mL/min
-        MpS_to_mLpS = (
-            273 * 8.314 * 6e7 / 1.01325e5
-        )  # used to convert from mol/s to mL/min
+        MpS_to_mLpS = 273 * 8.314 * 6e7 / 1.01325e5  # used to convert from mol/s to mL/min
         df_breakthrough.loc[:, "Q(t)"] = (
             sum(
                 df_breakthrough.loc[:, "True " + comp + " molar flow [mol/s]"]
@@ -907,16 +817,16 @@ class experiment_analysis:
         """
         df_MS = self.read_raw_MS()
         df_FM = self.read_raw_FM()
-        
+
         df_all = self.merge_MS_FM(df_MS, df_FM)
-        
-        df_all  = self.interpolate_combined_df(df_all)
-        
+
+        df_all = self.interpolate_combined_df(df_all)
+
         # Now converting the data time to the time of the breakthrough step
         df_all.loc[:, "Breakthrough time [s]"] = (
             df_all["Time [s]"].values - self.conditions["breakthrough_start"]
         )
-        
+
         df_breakthrough = self.create_df_breakthrough(df_all)
 
         df_breakthrough = self.generate_flows(df_breakthrough)
@@ -926,13 +836,13 @@ class experiment_analysis:
         df_breakthrough = self.compute_mole_fractions(df_breakthrough)
 
         df_breakthrough = self.compute_fake_outlet_ave_mw(df_breakthrough)
-        
+
         df_breakthrough = self.calculate_mass_flow(df_breakthrough)
-        
+
         df_breakthrough = self.calculate_molar_flow(df_breakthrough)
 
         df_breakthrough = self.calculate_He_bypass(df_breakthrough)
- 
+
         df_breakthrough = self.calculate_true_molar_flow(df_breakthrough)
 
         df_breakthrough = self.calculate_total_molar_flow(df_breakthrough)
@@ -942,18 +852,18 @@ class experiment_analysis:
         df_breakthrough = self.calculate_concentration(df_breakthrough)
 
         df_breakthrough = self.calculate_inlet_flow(df_breakthrough)
-        
+
         df_breakthrough = self.calculate_inlet_mf(df_breakthrough)
-        
+
         df_breakthrough = self.calculate_inlet_conc(df_breakthrough)
-        
+
         df_breakthrough = self.normalize_measurements(df_breakthrough)
-                
+
         df_breakthrough = self.order_df(df_breakthrough)
-        
+
         if self.conditions["extra_normalisation"] == True:
             df_breakthrough = self.perform_extra_normalization(df_breakthrough)
-        
+
         df_breakthrough = self.create_standard_form(df_breakthrough)
 
         return df_breakthrough
@@ -1085,18 +995,14 @@ class experiment_analysis:
         ]
         # Calculating volumetric flow - new tested code
         df.loc[:, "Volumetric flow in [m3/s]"] = pd.Series(
-            sum(
-                df.loc[:, comp + " inlet flow [mol/s]"] for comp in ["CO2", "N2", "H2O"]
-            )
+            sum(df.loc[:, comp + " inlet flow [mol/s]"] for comp in ["CO2", "N2", "H2O"])
             * R
             * T_exp
             / P_exp,
             index=df.index,
         )
         df.loc[:, "Volumetric flow out [m3/s]"] = pd.Series(
-            sum(
-                df.loc[:, comp + " molar flow [mol/s]"] for comp in ["CO2", "N2", "H2O"]
-            )
+            sum(df.loc[:, comp + " molar flow [mol/s]"] for comp in ["CO2", "N2", "H2O"])
             * R
             * T_exp
             / P_exp,
@@ -1108,9 +1014,7 @@ class experiment_analysis:
             label = comp + " inlet concentration [mol/m3]"
             c_avgin[comp] = df.loc[:, label].mean()
         # Calculating the average institial inlet velocity
-        v_avgin = df.loc[:, "Volumetric flow in [m3/s]"].mean() / (
-            bed_area * bed_porosity
-        )
+        v_avgin = df.loc[:, "Volumetric flow in [m3/s]"].mean() / (bed_area * bed_porosity)
         # Now calculating the term inside the integral for each time step
         for comp in ["CO2", "N2", "He", "H2O"]:
             label = "Smoothed Normalised " + comp + " molar flow [mol/s]"
@@ -1126,10 +1030,7 @@ class experiment_analysis:
             new_label = comp + " area integral"
             df.loc[:, new_label] = pd.Series(
                 [
-                    (
-                        df.loc[i, "Breakthrough time [s]"]
-                        - df.loc[i - 1, "Breakthrough time [s]"]
-                    )
+                    (df.loc[i, "Breakthrough time [s]"] - df.loc[i - 1, "Breakthrough time [s]"])
                     * 0.5
                     * (df.loc[i, label] + df.loc[i - 1, label])
                     if i > 0
@@ -1245,10 +1146,7 @@ def standard_output(
     print("")
     print(
         "This gives a capture capacity of: ",
-        (
-            sample_object.loading_data[0][1]["CO2"]
-            - blank_object.loading_data[0][1]["CO2"]
-        ),
+        (sample_object.loading_data[0][1]["CO2"] - blank_object.loading_data[0][1]["CO2"]),
         " mmol/g",
     )
     print("")
@@ -1256,12 +1154,8 @@ def standard_output(
         sample_object.loading_data[0][1]["CO2"] - blank_object.loading_data[0][1]["CO2"]
     ) / (sample_object.loading_data[0][1]["N2"] - blank_object.loading_data[0][1]["N2"])
     yCO2_yN2 = sum(
-        sum(df.loc[:, "CO2 inlet mole fraction [-]"]) / len(df)
-        for df in [sample_df, blank_df]
-    ) / sum(
-        sum(df.loc[:, "N2 inlet mole fraction [-]"]) / len(df)
-        for df in [sample_df, blank_df]
-    )
+        sum(df.loc[:, "CO2 inlet mole fraction [-]"]) / len(df) for df in [sample_df, blank_df]
+    ) / sum(sum(df.loc[:, "N2 inlet mole fraction [-]"]) / len(df) for df in [sample_df, blank_df])
     print(
         "Selectivity (x_CO2 * y_CO2 / x_N2 * y_N2) of: ",
         round((xCO2_xN2 * yCO2_yN2), 2),

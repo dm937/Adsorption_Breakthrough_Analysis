@@ -17,6 +17,7 @@ class TestVersion(unittest.TestCase):
         """
         version = get_version()
         self.assertIsInstance(version, str)
+
     def test_version_type_2(self):
         """Test the version is a string.
 
