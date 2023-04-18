@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""Version information for :mod:`pybreakthrough`.
+"""Version information for :mod:`AdsorptionBreakthroughAnalysis`.
 
-Run with ``python -m pybreakthrough.version``
+Run with ``python -m AdsorptionBreakthroughAnalysis.version``
 """
 
 import os
@@ -18,7 +18,7 @@ VERSION = "0.0.1"
 
 
 def get_git_hash() -> str:
-    """Get the :mod:`pybreakthrough` git hash."""
+    """Get the :mod:`AdsorptionBreakthroughAnalysis` git hash."""
     with open(os.devnull, "w") as devnull:
         try:
             ret = check_output(  # noqa: S603,S607
@@ -33,7 +33,7 @@ def get_git_hash() -> str:
 
 
 def get_version(with_git_hash: bool = False):
-    """Get the :mod:`pybreakthrough` version string, including a git hash."""
+    """Get the :mod:`AdsorptionBreakthroughAnalysis` version string, including a git hash."""
     return f"{VERSION}-{get_git_hash()}" if with_git_hash else VERSION
 
 
