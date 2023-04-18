@@ -7,6 +7,9 @@ prune tests/.pytest_cache
 prune docs/build
 prune docs/source/api
 
+prune explaining_program
+prune generate_results
+
 recursive-include docs/source *.py
 recursive-include docs/source *.rst
 recursive-include docs/source *.png
@@ -15,5 +18,3 @@ global-exclude *.py[cod] __pycache__ *.so *.dylib .DS_Store *.gpickle
 
 include README.md LICENSE
 exclude tox.ini .bumpversion.cfg .readthedocs.yml .cruft.json CITATION.cff docker-compose.yml Dockerfile
-
-prune explaining_program generate_results
