@@ -16,7 +16,7 @@ class TestVersion(unittest.TestCase):
     """Trivially test a version."""
 
     def _load_pybreak_obj(self, ExperimentalSetup, root_path, blank):
-        save_path = "/data/ffm2000/Dropbox (Heriot-Watt University Team)/RCCS_Capture_Fergus Mcilwaine/Projects/Daniel_exp_data/AdsorptionBreakthroughAnalysis/tests/data/processed_data/"
+        save_path = "tests/data/processed_data/"
 
         if blank == True:
             fpath = os.path.join(save_path, "bench_loading_experiment_22perc_ZIF8_blank.pickle")
@@ -61,7 +61,7 @@ class TestVersion(unittest.TestCase):
         ExperimentalSetup["breakthrough_end"] = 3600 * 1 + 60 * 4 + 30
         ExperimentalSetup["LowConcCo2"] = False
         ExperimentalSetup["Coriolis_start"] = 70
-        root_path = "/data/ffm2000/Dropbox (Heriot-Watt University Team)/RCCS_Capture_Fergus Mcilwaine/Projects/Daniel_exp_data/AdsorptionBreakthroughAnalysis/tests/data/experimental_data"
+        root_path = "tests/data/experimental_data"
 
         blank = True
         pybreak_obj, loading, sorted_csv = self._load_pybreak_obj(
@@ -92,7 +92,7 @@ class TestVersion(unittest.TestCase):
                 sorted_dict_compare["std"][key], bench_sorted_dict["std"][key], places=1
             )
 
-        # pybreak_obj_sorted_data = pd.read_csv(f"/data/ffm2000/Dropbox (Heriot-Watt University Team)/RCCS_Capture_Fergus Mcilwaine/Projects/Daniel_exp_data/AdsorptionBreakthroughAnalysis/tests/data/processed_data/bench_{coriolis_file_name.split('/')[-1]}_{MS_file_name.split('/')[-1]}.csv")
+        # pybreak_obj_sorted_data = pd.read_csv(f"tests/data/processed_data/bench_{coriolis_file_name.split('/')[-1]}_{MS_file_name.split('/')[-1]}.csv")
 
     def test_sorted_data(self):
         """Test the sorted data is the same as before."""
@@ -101,7 +101,7 @@ class TestVersion(unittest.TestCase):
         ExperimentalSetup["breakthrough_end"] = 3600 * 5 + 60 * 23 + 10
         ExperimentalSetup["LowConcCo2"] = False
         ExperimentalSetup["Coriolis_start"] = 30
-        root_path = "/data/ffm2000/Dropbox (Heriot-Watt University Team)/RCCS_Capture_Fergus Mcilwaine/Projects/Daniel_exp_data/AdsorptionBreakthroughAnalysis/tests/data/experimental_data"
+        root_path = "tests/data/experimental_data"
 
         blank = False
         pybreak_obj, loading, sorted_csv = self._load_pybreak_obj(
@@ -128,4 +128,4 @@ class TestVersion(unittest.TestCase):
                 pybreak_obj.calculate_loading()[1][1][key], loading[1][1][key], places=1
             )
 
-        # pybreak_obj_sorted_data = pd.read_csv(f"/data/ffm2000/Dropbox (Heriot-Watt University Team)/RCCS_Capture_Fergus Mcilwaine/Projects/Daniel_exp_data/AdsorptionBreakthroughAnalysis/tests/data/processed_data/bench_{coriolis_file_name.split('/')[-1]}_{MS_file_name.split('/')[-1]}.csv")
+        # pybreak_obj_sorted_data = pd.read_csv(f"tests/data/processed_data/bench_{coriolis_file_name.split('/')[-1]}_{MS_file_name.split('/')[-1]}.csv")
