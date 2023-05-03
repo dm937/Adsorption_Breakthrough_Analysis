@@ -87,12 +87,10 @@ class experiment_analysis:
         self.coriolis_file_name = coriolis_file_name  # self.variable_name is a variable that is persistent everywhere within this class (i.e. it can be accessed within the methods)
         self.MS_file_name = MS_file_name
         self.conditions = conditions
-        self.sorted_data = (
-            self.sort_data()
-        )  # This is an example. When the class is initiated, the sort_data function is called, and the results are stored in self.sorted_data
-        self.loading_data = self.calculate_loading(
-            integration_end=self.conditions["integration_end"]
-        )
+        # self.sorted_data = (
+        #     self.sort_data()
+        # )  # This is an example. When the class is initiated, the sort_data function is called, and the results are stored in self.sorted_data
+        # self.loading_data = self.calculate_loading()
 
     def discontinuity_search(
         self,
@@ -177,6 +175,14 @@ class experiment_analysis:
         df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
         df_MS = df_MS.drop(["ms"], axis=1)
         return df_MS
+
+    def prepare_raw_MS(self,df_MS):
+        # Adding the MS start time to the times in our dataframe
+        df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
+        df_MS = df_MS.drop(["ms"], axis=1)
+        return df_MS
+
+
 
     def read_raw_FM(self):
         df_FM = pd.read_csv(
@@ -806,6 +812,12 @@ class experiment_analysis:
             )
         return df_breakthrough
 
+    def input_mass_spec_data(self,df_MS,columns_to_rename = None):
+
+        if columns_to_rename:
+            df_MS = df_MS.rename(columns_to_rename,axis = 1)
+        self.input_df_MS = df_MS
+
     def sort_data(self):
         """
         this takes in the raw MS and Coriolis files and joins them into a dataframe.
@@ -815,7 +827,11 @@ class experiment_analysis:
         produces normalised and smoothed results about flow info
         final columns produced are the standard result (IAS) y(t)Q(t)/yinQin for CO2 and N2
         """
-        df_MS = self.read_raw_MS()
+        # df_MS = self.read_raw_MS()
+
+        df_MS = self.input_df_MS
+
+        df_MS = self.prepare_raw_MS(df_MS)
         df_FM = self.read_raw_FM()
 
         df_all = self.merge_MS_FM(df_MS, df_FM)
@@ -866,6 +882,8 @@ class experiment_analysis:
 
         df_breakthrough = self.create_standard_form(df_breakthrough)
 
+        self.sorted_data = df_breakthrough
+    
         return df_breakthrough
 
     def plot(
@@ -966,13 +984,15 @@ class experiment_analysis:
         self.sorted_data.to_csv(fileName + ".csv", index=False)
         pass
 
-    def calculate_loading(self, integration_end=1e6, density=1):
+    def calculate_loading(self, density=1):
         """
         Calculates the loading of the object.
         Note to find true loading for a sample take the value of the sample from this and subtract the blank (dead volume) loading value.
         As of now this only works for analysing breakthrough curves (NOT desorption surves).
         Return the loading capacities volume and mass based adn the selectivity of CO2/N2
         """
+        
+        integration_end = self.conditions["integration_end"]
         # Now our loading calculation
         bed_length, bed_diameter, bed_mass = (
             0.30,
