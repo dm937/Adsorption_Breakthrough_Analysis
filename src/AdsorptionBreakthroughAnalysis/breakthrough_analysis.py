@@ -75,7 +75,7 @@ class experiment_analysis:
     People wanting data will simply have to run the necessary cells on the notebook and results should be outputted.
     """
 
-    def __init__(self, coriolis_file_name, MS_file_name, conditions):
+    def __init__(self, coriolis_file_name, MS_file_name, conditions,**kwargs):
         """Initialise the class
         Args:
             coriolis_file_name: path and filename of coriolis data
@@ -87,6 +87,8 @@ class experiment_analysis:
         self.coriolis_file_name = coriolis_file_name  # self.variable_name is a variable that is persistent everywhere within this class (i.e. it can be accessed within the methods)
         self.MS_file_name = MS_file_name
         self.conditions = conditions
+        self.__dict__.update(kwargs)
+
         # self.sorted_data = (
         #     self.sort_data()
         # )  # This is an example. When the class is initiated, the sort_data function is called, and the results are stored in self.sorted_data
@@ -166,25 +168,39 @@ class experiment_analysis:
             RS_new = 1
         return {"RS_new": RS_new, "position": position}
 
-    def read_raw_MS(self):
-        df_MS = pd.read_csv(self.MS_file_name, header=(self.conditions["MS_header_row"] - 1)).drop(
-            ["Time", "Unnamed: 7"], axis=1
-        )  # reading the MS csv as a dataframe
+    def get_raw_MS(self):
+
+        try:
+
+            header_row = self.conditions["MS_header_row"] - 1
+            df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
+        except:
+            print(f'Error reading using MS_header_row as: {self.conditions["MS_header_row"]}')
+            with open(self.MS_file_name,'r') as f:
+                MS = f.readlines()
+            header_row = int(MS[1].split(',')[1]) - 1
+            print(f'Trying MS_header_row as: {header_row}')
+            df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
+
+        if hasattr(self, 'MS_columns_to_rename'):
+            df_MS = df_MS.rename(self.MS_columns_to_rename,axis = 1)
 
         # Adding the MS start time to the times in our dataframe
         df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
         df_MS = df_MS.drop(["ms"], axis=1)
+        df_MS = df_MS.drop(["Time"], axis=1)
+
         return df_MS
 
-    def prepare_raw_MS(self,df_MS):
-        # Adding the MS start time to the times in our dataframe
-        df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
-        df_MS = df_MS.drop(["ms"], axis=1)
-        return df_MS
+    # def prepare_raw_MS(self,df_MS):
+    #     # Adding the MS start time to the times in our dataframe
+    #     df_MS.loc[:, "Time [s]"] = df_MS["ms"].values / 1000 + self.conditions["MS_start"]
+    #     df_MS = df_MS.drop(["ms"], axis=1)
+    #     return df_MS
 
 
 
-    def read_raw_FM(self):
+    def get_raw_FM(self):
         df_FM = pd.read_csv(
             self.coriolis_file_name,
             sep=";",
@@ -812,13 +828,26 @@ class experiment_analysis:
             )
         return df_breakthrough
 
-    def input_mass_spec_data(self,df_MS,columns_to_rename = None):
+    # def input_mass_spec_data(self,df_MS,columns_to_rename = None):
 
-        if columns_to_rename:
-            df_MS = df_MS.rename(columns_to_rename,axis = 1)
-        self.input_df_MS = df_MS
+    #     if columns_to_rename:
+    #         df_MS = df_MS.rename(columns_to_rename,axis = 1)
+    #     self.input_df_MS = df_MS
 
-    def sort_data(self):
+
+    def get_interpolated_MS_FM(self):
+
+        df_MS = self.get_raw_MS()
+
+        df_FM = self.get_raw_FM()
+
+        df_all = self.merge_MS_FM(df_MS, df_FM)
+
+        df_all = self.interpolate_combined_df(df_all)
+         
+        return df_all
+
+    def get_breakthrough(self):
         """
         this takes in the raw MS and Coriolis files and joins them into a dataframe.
         Interpolates flow readings to gain values at MS reading times
@@ -827,12 +856,12 @@ class experiment_analysis:
         produces normalised and smoothed results about flow info
         final columns produced are the standard result (IAS) y(t)Q(t)/yinQin for CO2 and N2
         """
-        # df_MS = self.read_raw_MS()
+        df_MS = self.get_raw_MS()
 
-        df_MS = self.input_df_MS
+        # df_MS = self.input_df_MS
+        # df_MS = self.prepare_raw_MS(df_MS)
 
-        df_MS = self.prepare_raw_MS(df_MS)
-        df_FM = self.read_raw_FM()
+        df_FM = self.get_raw_FM()
 
         df_all = self.merge_MS_FM(df_MS, df_FM)
 
@@ -981,10 +1010,13 @@ class experiment_analysis:
         Exports any dataframe to csv, must specify file name and dataframe
         Working as required
         """
-        self.sorted_data.to_csv(fileName + ".csv", index=False)
-        pass
+        if not hasattr(self,'sorted_data'):
+            _ = self.get_breakthrough()
 
-    def calculate_loading(self, density=1):
+        self.sorted_data.to_csv(fileName + ".csv", index=False)
+        
+
+    def calculate_loading(self,integration_end=None, density=1):
         """
         Calculates the loading of the object.
         Note to find true loading for a sample take the value of the sample from this and subtract the blank (dead volume) loading value.
@@ -992,7 +1024,7 @@ class experiment_analysis:
         Return the loading capacities volume and mass based adn the selectivity of CO2/N2
         """
         
-        integration_end = self.conditions["integration_end"]
+        integration_end = integration_end or self.conditions["integration_end"]
         # Now our loading calculation
         bed_length, bed_diameter, bed_mass = (
             0.30,
@@ -1109,8 +1141,14 @@ def standard_output(
     width=16,
     height=11,
 ):
+    if not hasattr(sample_object, 'sorted_data'):
+        _ = sample_object.get_breakthrough()
+    if not hasattr(blank_object, 'sorted_data'):
+        _ = blank_object.get_breakthrough()
     sample_df = sample_object.sorted_data
+    sample_object.loading_data = sample_object.calculate_loading()
     blank_df = blank_object.sorted_data
+    blank_object.loading_data = blank_object.calculate_loading()
     x_axis = "Breakthrough time [s]"
     sns.set_theme(style="white")
     f, axs = plt.subplots(3, 1, figsize=(width, height))
