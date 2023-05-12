@@ -170,17 +170,15 @@ class experiment_analysis:
 
     def get_raw_MS(self):
 
-        try:
-
-            header_row = self.conditions["MS_header_row"] - 1
-            df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
-        except:
-            print(f'Error reading using MS_header_row as: {self.conditions["MS_header_row"]}')
-            with open(self.MS_file_name,'r') as f:
-                MS = f.readlines()
-            header_row = int(MS[1].split(',')[1]) - 1
-            print(f'Trying MS_header_row as: {header_row}')
-            df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
+        header_row = self.conditions["MS_header_row"] - 1
+        df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
+        # except:
+        #     print(f'Error reading using MS_header_row as: {self.conditions["MS_header_row"]}')
+        #     with open(self.MS_file_name,'r') as f:
+        #         MS = f.readlines()
+        #     header_row = int(MS[1].split(',')[1]) - 1
+        #     print(f'Trying MS_header_row as: {header_row}')
+        #     df_MS = pd.read_csv(self.MS_file_name, header=header_row)  # reading the MS csv as a dataframe
 
         if hasattr(self, 'MS_columns_to_rename'):
             df_MS = df_MS.rename(self.MS_columns_to_rename,axis = 1)
